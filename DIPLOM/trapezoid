@@ -1,0 +1,87 @@
+import argparse
+import numpy as np
+from scipy.integrate import simps
+
+pi = np.pi
+h = 6.626e-34
+c = 3.0e+8
+k = 1.38e-23
+
+def planck(wav, T):
+    a = 2.0*h*pi*c**2
+    b = h*c/(wav*k*T)
+    intensity = a/ ( (wav**5)*(np.exp(b) - 1.0) )
+    return intensity
+
+def tau(lambdas):
+    """
+    Transmission coefficient for the silicate material
+    """
+    return 0.95 * np.exp(-((lambdas - 2.5) / 0.1)**2)
+
+def chi_Si(lambdas, T):
+    """
+    Spectral efficiency of the silicate material
+    """
+    y1_lambda = tau(lambdas) * planck(lambdas, T)
+    y2_lambda = tau(lambdas) * planck(lambdas, 1273)
+    integrand_num = y1_lambda**2
+    integrand_denom = y1_lambda
+    numerator = simps(integrand_num, lambdas)
+    denominator = simps(integrand_denom, lambdas)
+    return integrand_num * numerator / denominator
+
+def chi_FSA(lambdas):
+    """
+    Spectral efficiency of the FSA photoresistor
+    """
+    S_lambda = np.ones_like(lambdas)
+    S_lambda[(lambdas < 0.4) | (lambdas > 1.1)] = 0
+    return S_lambda
+
+def chi_InSb(lambdas):
+    """
+    Spectral efficiency of InSb
+    """
+    S_lambda = np.zeros_like(lambdas)
+    S_lambda[(lambdas > 1.7) & (lambdas < 5)] = 0.7
+    return S_lambda
+
+def chi_Ge(lambdas):
+    """
+    Spectral efficiency of Ge single crystal:Hg at 30K
+    """
+    S_lambda = np.zeros_like(lambdas)
+    S_lambda[(lambdas > 1.8) & (lambdas < 4)] = 0.6
+    return S_lambda
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Calculate spectral efficiencies')
+    parser.add_argument('--T', type=float, default=873,
+                        help='temperature of the silicate material in Kelvin')
+    parser.add_argument('--start', type=float, default=1.7e-6,
+                        help='start wavelength in meters')
+    parser.add_argument('--stop', type=float, default=5e-6,
+                        help='stop wavelength in meters')
+    parser.add_argument('--step', type=float, default=1e-9,
+                        help='step size in meters')
+    args = parser.parse_args()
+    
+    wavelengths = np.arange(args.start, args.stop, args.step)
+    chi_Si_values = chi_Si(wavelengths, args.T)
+    chi_FSA_values = chi_FSA(wavelengths)
+    chi_InSb_values = chi_InSb(wavelengths)
+    chi_Ge_values = chi_Ge(wavelengths)
+    
+    # plot the spectral efficiencies
+    import matplotlib.pyplot as plt
+    
+    plt.plot(wavelengths*1e6, chi_Si_values, 'r-', label='Silicate')
+    plt.plot(wavelengths*1e6, chi_FSA_values, 'g-', label='FSA Photoresistor')
+    plt.plot(wavelengths*1e6, chi_InSb_values, 'b-', label='InSb')
+    plt.plot(wavelengths*1e6, chi_Ge_values, 'k-', label='Ge:Hg (30K)')
+    plt.xlabel('Wavelength (um)')
+    plt.ylabel('Spectral Efficiency')
+    plt.title('Spectral Efficiency vs. Wavelength')
+    plt.legend()
+    plt.show()
