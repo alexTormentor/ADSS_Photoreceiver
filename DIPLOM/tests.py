@@ -1303,5 +1303,3 @@ def test45():
     temperature = 125
     spectral_efficiency = photodetector_spectral_efficiency(s, y_1, wavelength_range)
     print(spectral_efficiency)
-
-#chat?hist=y94zr6wPtHiy-VmtKsA3a7qLFF5Ltpo-p0LTi5RmRtk
