@@ -141,6 +141,7 @@ class BasicCalc(MainPage):
         voltage = [0, 0.5, 1, 1.5, 2, 2.5]
         current = [0, 0.12, 0.3, 0.4, 0.5, 0.6]
         intensity = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
+        a = 0
         a = calculate_nonlinearity_coefficient(voltage, current)
         F = calculate_radiation_flux(energy=W, time=Time)
         b = calculate_light_nonlinearity_coefficient(intensity, current)
